@@ -1,29 +1,21 @@
-# Artificial Intelligence for Simulation and Games
+# Artificial Intelligence for Games and Simulations
 
-`docs/` contains exercises and notes for the course.
-`aigs/` contains code associated with the course and the exercises.
-`ludens.py` contains random code snippets that I (Noah) am playing around with.
+In this course we use Python 3.11. Running `pip install aigs`
+in a clean Python 3.11 virtual environment should install all dependencies.
+We are assuming that you have a basic understanding of Python and programming.
 
-## Setup
+`labs/` contains exercises for the course, which you should do.
+Being able to do the contents of `labs/` is a prerequisite
+for being able making a successful final project.
 
-I use [zed.dev](https://zed.dev) as my editor, and recommend you do the same for this course.
-In a clean Python virtual environment, install the dependencies with `pip install aigs`.
-You should be able to run `.py` scripts in a notebook-like manner in Zed, defining blocks with `# %%` and running them with `Ctrl+Enter`.
-If my setup looks intriguing to you, I recommend you check out my [dotfiles](https://github.com/syrkis/dotfiles).
-I encourage you to fork this repository and make a folder called `my` where you can store your own notes and code snippets.
-That way, you can keep your work separate from the course material, and merge in my updates without conflicts.
+I recommend cloning this repository, and making a folder `my/`
+where you can put your own code (I will be updating this repository).
 
-## Studying
+## Labs
 
-Please follow the official course material.
-This repository contains exercises, which you can do,
-as well as some of my (Noah's) thoughts on the material.
-
-## Scripts
-
-The scripts in the `aigs` folder are meant to be run in a notebook-like manner.
-They are *not* meant to be a library, but rather a collection of useful, unfinished code,
-that you can use to understand the concepts in the course.
+1. [Math](labs/math.md)
+2. Neural Networks ...
+3. ...
 
 ### Core concept scripts
 
