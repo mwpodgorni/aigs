@@ -9,7 +9,7 @@ import evosax  # <- use this (https://github.com/RobertTLange/evosax)
 import evojax  # <- or this  (https://github.com/google/evojax)
 
 
-# %% Learning tools ######################################################
+# %% Learning the tools ##################################################
 # explore evosax and evojax on their respective github pages
 
 
