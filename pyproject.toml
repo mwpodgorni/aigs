@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aigs"
-version = "0.0.0"
+version = "0.0.1"
 description = ""
 authors = ["Noah Syrkis <noah@syrkis.com>"]
 readme = "README.md"
