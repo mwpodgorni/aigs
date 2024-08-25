@@ -14,6 +14,6 @@ for being able making a successful final project.
 I recommend cloning this repository, and making a folder `my/`
 where you can put your own code (I will be updating this repository).
 
-1. [Math](labs/lab_1.md)
+1. [Math](labs/lab_1.py)
 2. Neural Networks ...
 3. ...
