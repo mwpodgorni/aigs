@@ -23,7 +23,6 @@ rng, *keys = random.split(rng, 4)  # Key for each operation
 
 sigma = random.normal(keys[0], (1,))  # Standard deviation
 mu = random.normal(keys[1], (1,))  # Mean
-
 x = random.normal(keys[2], (10,)) * sigma + mu
 print(x)
 
@@ -33,6 +32,34 @@ print(x)
 # Write your own functions to do this.
 
 # %% Solution
+def computeMean(x:Array) -> float:
+     sum = 0
+     for i in x:
+        sum += i
+        return sum/len(x)
+
+def computeVariance(x:Array) -> float:
+    mean = computeMean(x)
+    sum = 0
+    for i in x:
+        sum += (i - mean)**2
+    return sum/len(x)
+
+def computeMedian(x:Array) -> float:
+    x = sorted(x)
+    n = len(x)
+    if n % 2 == 0:
+        return (x[n//2] + x[n//2 - 1])/2
+    else:
+        return x[n//2]
+
+def computeStandardDeviation(x:Array) -> float:
+    return jnp.sqrt(computeVariance(x))
+
+print(f'mean:{computeMean(x)}')
+print(f'variance:{computeVariance(x)}')
+print(f'median:{computeMedian(x)}')
+print(f'deviation:{computeStandardDeviation(x)}')
 
 # %% Question two [markdown]
 # We are randomly setting the mean and the standard deviation from which the dataset is drawn.
@@ -41,6 +68,8 @@ print(x)
 # would the values you computed get closer to the true values?
 
 # %% Solution
+print(f'mu:{mu}, sigma:{sigma}')
+# they wouldnt get closer because they are not related
 
 # %% Vector exercise [markdown] #########################################
 # You're given two vectors `a` and `b` below.
@@ -51,11 +80,16 @@ rng, *keys = random.split(rng, 3)  # Key for each operation
 a = random.normal(keys[0], (10,))
 b = random.normal(keys[1], (10,))
 
+
 # %% Question three [markdown]
 # write a function that computes the dot product of two vectors without using the built-in function `jnp.dot`.
 
 # %% Solution
-
+def computeDotProduct(a:Array, b:Array) -> float:
+    sum = 0
+    for i in range(len(a)):
+        sum += a[i]*b[i]
+    return sum
 
 # %% Question four [markdown]
 # write a function that computes the outer product of two vectors without using the built-in function `jnp.outer`.
