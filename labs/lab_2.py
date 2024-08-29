@@ -9,6 +9,7 @@ import jax.numpy as jnp
 from jaxtyping import Array
 import chex
 import equinox as eqx
+import optax
 
 from typing import Callable, Dict, List
 from tqdm import tqdm
@@ -26,20 +27,22 @@ import matplotlib.pyplot as plt  # <- for plotting
 # Use the MNIST dataset from tensorflow_datasets.
 
 # %% Data
-mnist = tfds.load("mnist", split="train")
-x_data = jnp.array([x["image"] for x in tfds.as_numpy(mnist)]).reshape(-1, 28 * 28)
-y_data = jnp.array([x["label"] for x in tfds.as_numpy(mnist)])
+# mnist = tfds.load("mnist", split="train")
+# x_data = jnp.array([x["image"] for x in tfds.as_numpy(mnist)]).reshape(-1, 28 * 28)
+# y_data = jnp.array([x["label"] for x in tfds.as_numpy(mnist)])
 
 # %%
 x_data.shape, y_data.shape
 
+# %% Plot
+hidden = 32
 
 # %% Params (define model params in a dict (or list, of chex.dataclass))
 rng = random.PRNGKey(0)
-w1 = random.normal(rng, (28 * 28, 3))  # <-
-b1 = random.normal(rng, (3,))  # <-
-w2 = random.normal(rng, (3, 10))  # <-
-b2 = random.normal(rng, (10,))  # <-
+w1 = random.normal(rng, (28 * 28, hidden)) * 0.01
+b1 = random.normal(rng, (hidden,)) * 0.01
+w2 = random.normal(rng, (hidden, 10)) * 0.01
+b2 = random.normal(rng, (10,)) * 0.01
 
 
 # %% Model (define model as a function that takes params and x_data)
@@ -48,6 +51,7 @@ def model(params, x_data):
     z = x_data @ w1 + b1
     z = nn.relu(z)
     z = z @ w2 + b2
+    z = nn.softmax(z)
     return z
 
 
