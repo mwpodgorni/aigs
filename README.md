@@ -31,4 +31,4 @@ as major parts will be changed and added.
 
 ## read
 
-![backprop fun](https://colah.github.io/posts/2015-08-Backprop/)
+[backprob](https://colah.github.io/posts/2015-08-Backprop/)
