@@ -19,9 +19,10 @@ import chex
 
 # %% Setup
 rng = random.PRNGKey(seed := 0)  # Random number generator
+
 rng, *keys = random.split(rng, 4)  # Key for each operation
 
-sigma = random.normal(keys[0], (1,))  # Standard deviation
+sigma = jnp.abs(random.normal(keys[0], (1,)))  # Standard deviation
 mu = random.normal(keys[1], (1,))  # Mean
 
 x = random.normal(keys[2], (10,)) * sigma + mu
