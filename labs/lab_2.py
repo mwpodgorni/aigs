@@ -97,7 +97,7 @@ class Value:
 
 def add(x: Value, y: Value) -> Value:
     """Add two values."""
-    raise NotImplementedError
+    return Value(x.value + y.value, parents=[x, y], gradient_fn=lambda: 1)
 
 
 def mul(x: Value, y: Value) -> Value:
@@ -113,3 +113,7 @@ def backward(x: Value, gradient: Array) -> Dict[Value, Array]:
 def update(x: Value, gradient: Array) -> Value:
     """Apply the gradient to the value."""
     raise NotImplementedError
+
+
+# %%
+jnp.array(1)
