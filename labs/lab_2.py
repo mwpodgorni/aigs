@@ -63,7 +63,7 @@ def loss_fn(params, x_data, y_data):  # y: n
 params = [w1, b1, w2, b2]
 for i in tqdm(range(100)):
     grads = grad(loss_fn)(params, x_data, y_data)
-    # params = [params[i] - 0.01 * grads[i] for i in range(len(params))]
+    params = [params[i] - 0.01 * grads[i] for i in range(len(params))]
     # params = tree.map(lambda p, g: p - 0.01 * g, params, grads)  # <- same as above
 
     # params -= gradient_of_loss(params)
