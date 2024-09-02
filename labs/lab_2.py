@@ -49,9 +49,9 @@ b2 = random.normal(rng, (10,)) * 0.01
 def model(params, x_data):
     w1, b1, w2, b2 = params
     z = x_data @ w1 + b1
-    z = nn.relu(z)
+    z = nn.relu(z)  # <- activation
     z = z @ w2 + b2
-    z = nn.softmax(z)
+    z = nn.softmax(z)  # <- activation
     return z
 
 
