@@ -2,4 +2,6 @@
 from jax import random, grad, tree
 import jax.numpy as jnp
 
-# %% Functions
+
+def identity(x):
+    return x
