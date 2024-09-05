@@ -1,4 +1,4 @@
-# %% lab_4.py
+# %% lab_3.py
 #    deep learning with JAX
 # by: Noah Syrkis
 
