@@ -21,38 +21,41 @@ x, y = x.reshape(-1, batch_size, 28 * 28), y.reshape(-1, batch_size, 10)
 
 # %%
 def model(x, params):
-    w1, w2, b1, b2 = params
-    z = nn.relu(x @ w1 + b1) @ w2 + b2
-    y_hat = nn.softmax(z, axis=1)
-    return y_hat
+    w1, w2, b1, b2 = params        # <- assign the parameters to convenient names
+    z = x @ w1 + b1                # <- linear transformation layer one
+    z = nn.relu(z)                 # <- activation layer one
+    z = z @ w2 + b2                # <- linear transformation layer two
+    y_hat = nn.softmax(z, axis=1)  # <- turn rows into probabilities
+    return y_hat                   # <- return the prediction
 
 def loss_fn(param, x, y):
-    y_hat = model(x, param)
-    return ((y - y_hat) ** 2).mean()
+    y_hat = model(x, param)             # <- get the prediction from the model with the given parameters
+    loss =  ((y - y_hat) ** 2).mean()   # <- calculate the mean squared error
+    return loss
 
-grad_fn = jit(grad(loss_fn))
+grad_fn = grad(loss_fn)   # <- get the gradient function of the loss function
 
 
 
-keys = random.split(random.PRNGKey(0), 4)
-w1 = random.normal(keys[0], (28 * 28, 32)) * 0.01
-w2 = random.normal(keys[1], (32, 10)) * 0.01
-b1 = random.normal(keys[2], (32,)) * 0.01
-b2 = random.normal(keys[3], (10,)) * 0.01
-params = (w1, w2, b1, b2)
+keys = random.split(random.PRNGKey(0), 4)              # <- split the random key into 4 keys
+w1 = random.normal(keys[0], (28 * 28, 32)) * 0.01      # <- initialize the weights of the first layer
+w2 = random.normal(keys[1], (32, 10)) * 0.01           # <- initialize the weights of the second layer
+b1 = random.normal(keys[2], (32,)) * 0.01              # <- initialize the bias of the first layer
+b2 = random.normal(keys[3], (10,)) * 0.01              # <- initialize the bias of the second layer
+params = (w1, w2, b1, b2)                              # <- pack the parameters into a tuple
 
 # %%
 
-def update(p, g):
-    return p - 0.01 * g
+def update(parameter, gradient):
+    return parameter - 0.01 * gradient  # <- update the parameter with a learning rate of 0.01
 
-pbar = tqdm(range(20))
-for epoch in pbar:
-    for x_batch, y_batch in zip(x, y):
-        grads = grad_fn(params, x_batch, y_batch)
-        params = tree.map(update, params, grads)
-        loss = loss_fn(params, x_batch, y_batch)
-        pbar.set_description(f"Loss: {loss:.2f}")  # type: ignore
+pbar = tqdm(range(20))                              # <- create a progress bar (20 epochs)
+for epoch in pbar:                                  # <- iterate through the dataset multiple times
+    for x_batch, y_batch in zip(x, y):              # <- iterate over the batches
+        grads = grad_fn(params, x_batch, y_batch)   # <- calculate the gradients
+        params = tree.map(update, params, grads)    # <- update the parameters to lower loss
+        loss = loss_fn(params, x_batch, y_batch)    # <- calculate the loss
+        pbar.set_description(f"Loss: {loss:.2f}")
 
 # %%
 y_hat = model(x, params)
