@@ -15,14 +15,14 @@ print('1 constants')
 env = gym.make("CartPole-v1", render_mode="human")  #  render_mode="human")
 rng = random.PRNGKey(0)
 entry = namedtuple("Memory", ["obs", "action", "reward", "next_obs", "done"])
-memory = deque(maxlen=1000)  # <- replay buffer, deque - double-end queue
+memory = deque(maxlen=10000)  # <- replay buffer, deque - double-end queue
 batch_size = 32
 gamma = 0.99  # Discount factor
 epsilon = 1.0
 epsilon_decay = 0.995
-learning_rate = 0.0005
+learning_rate = 0.0003
 min_epsilon = 0.1
-target_update_freq = 1000  # Frequency to update target network
+target_update_freq = 500  # Frequency to update target network
 
 # %% Model ###############################################################
 print('2 model')
@@ -93,7 +93,7 @@ sum_reward = 0
 for i in tqdm(range(episodes)):
     obs, info = env.reset()  # Reset environment at the start of each episode
     done = False
-    total_reward = 0 
+    total_reward = 0
 
     while not done:
             rng, key = random.split(rng)
