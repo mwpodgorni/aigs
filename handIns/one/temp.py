@@ -15,12 +15,12 @@ print('1 constants')
 env = gym.make("CartPole-v1", render_mode="human")  #  render_mode="human")
 rng = random.PRNGKey(0)
 entry = namedtuple("Memory", ["obs", "action", "reward", "next_obs", "done"])
-memory = deque(maxlen=10000)  # <- replay buffer, deque - double-end queue
-batch_size = 63
+memory = deque(maxlen=1000)  # <- replay buffer, deque - double-end queue
+batch_size = 32
 gamma = 0.99  # Discount factor
 epsilon = 1.0
-epsilon_decay = 0.99
-learning_rate = 0.001
+epsilon_decay = 0.995
+learning_rate = 0.0005
 min_epsilon = 0.1
 target_update_freq = 1000  # Frequency to update target network
 
@@ -87,48 +87,51 @@ print('3 environment')
 # observation
 obs, info = env.reset()
 total_reward = 0.0  # Track total reward per episode
-episodes = 100000  # Run 100000 iterations for training
+episodes = 900  # Run 100000 iterations for training
 step_counter = 0  # Step counter for target network update
-
+sum_reward = 0
 for i in tqdm(range(episodes)):
-    rng, key = random.split(rng)
-    # Forward pass to get Q-values from the model
-    q_values = model.apply(params, jnp.array(obs).reshape(1, -1))
-    action = select_action(key, q_values, epsilon)  # Select action
+    obs, info = env.reset()  # Reset environment at the start of each episode
+    done = False
+    total_reward = 0 
 
-    # Step environment with selected action
-    next_obs, reward, terminated, truncated, info = env.step(action)
-    done = terminated or truncated
-    memory.append(entry(obs, action, reward, next_obs, done))  # Store transition in replay buffer
+    while not done:
+            rng, key = random.split(rng)
+            # Forward pass to get Q-values from the model
+            q_values = model.apply(params, jnp.array(obs).reshape(1, -1))
+            action = select_action(key, q_values, epsilon)  # Select action
 
-    total_reward += reward  # Accumulate episode reward
-    # Reset environment if episode is done
-    if done:
-        print(f"Episode reward: {total_reward}")  # Track performance
-        obs, info = env.reset()  # Proper environment reset
-        total_reward = 0  # Reset reward for the new episode
-    else:
-        obs = next_obs
+            # Step environment with selected action
+            next_obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
+            memory.append(entry(obs, action, reward, next_obs, done))  # Store transition in replay buffer
 
-    # Perform a training step if there's enough data in the buffer
-    if len(memory) > batch_size:
-        batch = py_random.sample(memory, batch_size)
-        batch = {
-            "obs": jnp.array([entry.obs for entry in batch]),
-            "action": jnp.array([entry.action for entry in batch]).reshape(-1, 1),  # Shape (batch_size, 1)
-            "reward": jnp.array([entry.reward for entry in batch]),
-            "next_obs": jnp.array([entry.next_obs for entry in batch]),
-            "done": jnp.array([entry.done for entry in batch], dtype=jnp.float32),
-        }
-        params, opt_state = train_step(params, target_params, batch, opt_state)
+            total_reward += reward  # Accumulate episode reward
+            obs = next_obs  # Update observation
 
-    # Update the target network periodically
-    if step_counter % target_update_freq == 0:
-        target_params = jax.tree_util.tree_map(lambda x: x.copy(), params)
+            # Perform a training step if there's enough data in the buffer
+            if len(memory) > batch_size:
+                batch = py_random.sample(memory, batch_size)
+                batch = {
+                    "obs": jnp.array([entry.obs for entry in batch]),
+                    "action": jnp.array([entry.action for entry in batch]).reshape(-1, 1),  # Shape (batch_size, 1)
+                    "reward": jnp.array([entry.reward for entry in batch]),
+                    "next_obs": jnp.array([entry.next_obs for entry in batch]),
+                    "done": jnp.array([entry.done for entry in batch], dtype=jnp.float32),
+                }
+                params, opt_state = train_step(params, target_params, batch, opt_state)
 
-    step_counter += 1
+            # Update the target network periodically
+            if step_counter % target_update_freq == 0:
+                target_params = jax.tree_util.tree_map(lambda x: x.copy(), params)
 
-    # Decay epsilon (epsilon-greedy exploration)
-    epsilon = max(min_epsilon, epsilon * epsilon_decay)
+            step_counter += 1
+
+            # Decay epsilon (epsilon-greedy exploration)
+            epsilon = max(min_epsilon, epsilon * epsilon_decay)
+
+    sum_reward += total_reward
+    print(f"Episode {i+1} reward: {total_reward}")  # Print the reward at the end of each episode
+print('Average reward:', sum_reward/episodes)
 
 env.close()
