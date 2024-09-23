@@ -131,7 +131,8 @@ def train_step(params, target_params, batch, opt_state):
 
 
 # %% Environment #########################################################
-state = load_state()
+# state = load_state()
+state = None
 if state:
     episode_start = state["episode"] + 1 
     params = state["params"]

@@ -9,26 +9,24 @@ import gymnasium as gym
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-# %%Get sample images from the environment
+# %% Step 1: Get sample images from the environment
 def get_sample_images():
     env = gym.make("CarRacing-v2", render_mode="rgb_array")
     states = []
     state, _ = env.reset()
     for i in tqdm(range(1500)):
-        print('step', i)
         action = env.action_space.sample()
         state, *_ = env.step(action)
         if i >= 500:
             states.append(state)
     return jnp.array(states).astype(jnp.float32) / 255.0  # Normalize
 
-print('before  img')
 data = get_sample_images()
 
 plt.imshow(data[500])
 plt.show()
-print('after img')
-# %% Encoder and decoder
+
+# %% Step 2: Encoder and Decoder
 class Encoder(nn.Module):
     @nn.compact
     def __call__(self, x):
@@ -52,7 +50,7 @@ class Decoder(nn.Module):
         x = nn.ConvTranspose(features=3, kernel_size=(3, 3), strides=(2, 2))(x)
         return x
 
-# %% Autoencoder
+# %% Step 3: Autoencoder
 class Autoencoder(nn.Module):
     def setup(self):
         self.encoder = Encoder()
@@ -64,17 +62,14 @@ class Autoencoder(nn.Module):
         return reconstructed
 
 def create_train_state(rng, learning_rate):
-    print('create_train_state')
     model = Autoencoder()
     variables = model.init(rng, jnp.ones((1, 96, 96, 3)))
     params = variables['params']
     tx = optax.adam(learning_rate)
     return train_state.TrainState.create(apply_fn=model.apply, params=params, tx=tx)
 
-
 @jax.jit
 def train_step(state, batch):
-    print('trainstep')
     def loss_fn(params):
         reconstructed = state.apply_fn({'params': params}, batch)
         loss = jnp.mean((reconstructed - batch) ** 2)
@@ -85,47 +80,31 @@ def train_step(state, batch):
     state = state.apply_gradients(grads=grads)
     return state, loss
 
-print('1')
+# %% Step 4: Initialize training state
 rng = jax.random.PRNGKey(0)
 state = create_train_state(rng, learning_rate=1e-3)
-print('2')
 
-# %% Actual data train
+# %% Step 5: Training loop
 for epoch in tqdm(range(10)):  # Adjust the number of epochs as needed
     state, loss = train_step(state, data)
     print(f'Epoch {epoch}, Loss: {loss}')
 
-
-# %%Reconstruct images
+# %% Step 6: Reconstruct images
 reconstructed_images = state.apply_fn({'params': state.params}, data)
 
-# %%Display original and reconstructed images
-fig, axes = plt.subplots(2, 2, figsize=(10, 10))
-for i in range(10):
-    axes[0, i].imshow(data[i])
+# %% Step 7: Display original and reconstructed images
+# Clipping the image data before displaying
+clipped_data = jnp.clip(data, 0, 1)
+clipped_reconstructed_images = jnp.clip(reconstructed_images, 0, 1)
+
+# Adjust the number of columns based on the number of images
+fig, axes = plt.subplots(2, min(10, len(clipped_data)), figsize=(10, 10))
+
+# Display original and reconstructed images
+for i in range(min(10, len(clipped_data))):
+    axes[0, i].imshow(clipped_data[i])
     axes[0, i].axis('off')
-    axes[1, i].imshow(reconstructed_images[i])
-    axes[1, i].axis('on')
+    axes[1, i].imshow(clipped_reconstructed_images[i])
+    axes[1, i].axis('off')
 
 plt.show()
-# %% Step 3: create a deconvolutional model that maps the latent space back to an image
-
-# %% Step 4: train the model to minimize the reconstruction error
-
-# %% Step 5: generate some images by sampling from the latent space
-
-# %% Step 6: visualize the images
-
-# %% Step 7: (optional) try to interpolate between two images by interpolating between their latent representations
-
-# %% Step 8: (optional) try to generate images that are similar to a given image by optimizing the latent representation
-
-# %% Step 9: instead of mapping the image to a latent space, map the image to a distribution over latent spaces (VAE)
-
-# %% Step 10: sample from the distribution over latent spaces and generate images
-
-# %% Step 11: (optional) try to interpolate between two images by interpolating between their distributions over latent spaces
-
-# %% Step 12: (optional) try to generate images that are similar to a given image by optimizing the distribution over latent spaces
-
-# %% Step 13: (optional) try to switch out the VAE for a GAN
