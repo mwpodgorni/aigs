@@ -11,11 +11,14 @@ from flax.training import train_state
 from tqdm import tqdm
 import os  # Import for file existence check
 import pickle  # Import for saving/loading data
+
 # Instantiate a Gym Sokoban environment
 env = gym.make('Sokoban-v2')
 dataset_path = 'sokoban_levels.npy'
 params_path = 'autoencoder_params.pkl'
 opt_state_path = 'optimizer_state.pkl'
+
+print('start')
 
 # %% Define the Autoencoder class
 class Autoencoder(nn.Module):
@@ -83,7 +86,6 @@ def save_data(filepath, data):
     with open(filepath, 'wb') as f:
         pickle.dump(data, f)
 
-
 # Separate function for loading the dataset with normalization
 def load_dataset(filepath):
     if os.path.exists(filepath):
@@ -112,6 +114,7 @@ def train_autoencoder(dataset, latent_dim=32, num_epochs=50, learning_rate=0.001
     if opt_state is None:
         opt_state = optimizer.init(params)
 
+    @jax.jit
     def loss_fn(params, x):
         x_reconstructed = autoencoder.apply(params, x)
         return jnp.mean((x - x_reconstructed) ** 2)
@@ -132,7 +135,7 @@ def train_autoencoder(dataset, latent_dim=32, num_epochs=50, learning_rate=0.001
             epoch_loss += loss
 
         print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {epoch_loss / len(dataset):.4f}')
-        
+
         if (epoch + 1) % 50 == 0:
             save_data(params_path, params)
             save_data(opt_state_path, opt_state)
@@ -143,7 +146,7 @@ def train_autoencoder(dataset, latent_dim=32, num_epochs=50, learning_rate=0.001
 # %% Function to visualize original and decoded levels side by side
 def display_original_and_decoded(original, decoded):
     fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-    
+
     ax[0].imshow(original)
     ax[0].set_title('Original Level')
     ax[0].axis('off')
@@ -155,29 +158,32 @@ def display_original_and_decoded(original, decoded):
     plt.show()
 
 # %% Load dataset if it exists, otherwise sample and save
-# Load dataset if it exists, otherwise sample and save
-dataset = load_dataset(dataset_path)  # Use load_dataset for normalization
-if dataset is None:
+print('Loading or sampling levels...')
+existing_dataset = load_dataset(dataset_path)  # Use load_dataset for normalization
+new_levels = sample_levels()
+
+# Normalize the new levels before saving
+new_levels = new_levels / 242.0  # Normalize to [0, 1]
+
+dataset = None
+if existing_dataset is None:
     print('Sampling levels...')
-    dataset = sample_levels()
-    save_data(dataset_path, dataset)
-    print('Dataset collected and saved.')
+    dataset = new_levels
 else:
+    dataset = np.concatenate((existing_dataset, new_levels), axis=0)
     print('Loaded existing dataset.')
+# print("Original Min pixel value:", jnp.min(dataset[0]))
+# print("Original Max pixel value:", jnp.max(dataset[0]))
+# Save the normalized dataset
+save_data(dataset_path, dataset)
 
-print(f'Dataset shape: {dataset.shape}') 
+print(f'Dataset shape: {dataset.shape}')
 
 # Train the autoencoder
-# Train the autoencoder
+print('Training the autoencoder...')
 autoencoder, params = train_autoencoder(dataset)
 
 # Generate levels and display them
-# for original in dataset:
-#     original = jnp.array(original)[jnp.newaxis, ...]  # Add batch dimension
-#     decoded = autoencoder.apply(params, original)  # Get the decoded output
-#     decoded = jnp.clip(decoded, 0, 1)  # Clip the values to be in the range [0, 1]
-    
-#     display_original_and_decoded(original.squeeze(), decoded.squeeze())
 original = jnp.array(dataset[-1])[jnp.newaxis, ...]  # Add batch dimension for the model input
 decoded = autoencoder.apply(params, original)  # Get the decoded output
 decoded = jnp.clip(decoded, 0, 1)  # Clip the values to be in the range [0, 1]
