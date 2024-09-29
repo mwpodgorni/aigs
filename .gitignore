@@ -4,3 +4,4 @@ dist/
 **/*.html
 **/*.svg
 **/*.venv
+/handIns/two/attempt3/myenv
