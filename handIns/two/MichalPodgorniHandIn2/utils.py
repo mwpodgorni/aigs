@@ -5,8 +5,8 @@ import matplotlib.image as mpimg
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-import math
 import random
+from sklearn.decomposition import PCA
 
 # Define the object type mappings for encoding levels
 OBJECT_TYPES = {
@@ -45,7 +45,6 @@ def encode_level(grid):
 
     return encoded
 
-# Encode multiple levels into 3D tensors
 def encode_multiple_levels(num_levels, env, rng):
     encoded_levels = []
     for i in tqdm(range(num_levels)):
@@ -119,16 +118,13 @@ def visualize_decoded_level_with_assets(model, params, original_level, original_
     # Plot the original and reconstructed levels using assets
     fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 
-    # Use the map_level_to_image function to map each grid position to the corresponding asset
     original_image = map_level_to_image(original_level_classes)
     reconstructed_image = map_level_to_image(reconstructed_level_classes)
 
-    # Display original level
     axs[0].imshow(original_image)
     axs[0].set_title("Original Level")
     axs[0].axis('off')
 
-    # Display reconstructed level
     axs[1].imshow(reconstructed_image)
     axs[1].set_title("Reconstructed Level")
     axs[1].axis('off')
@@ -136,11 +132,9 @@ def visualize_decoded_level_with_assets(model, params, original_level, original_
     plt.show()
 
 def resize_image(image, new_size=(16, 16)):
-    # Convert the image to uint8 type if it's not already
     if image.dtype != np.uint8:
-        image = (image * 255).astype(np.uint8)  # Scale and convert to uint8
+        image = (image * 255).astype(np.uint8)  
 
-    # If the image has an alpha channel (i.e., 4 channels), drop the alpha
     if image.shape[-1] == 4:
         image = image[:, :, :3]  # Drop the alpha channel
 
@@ -179,4 +173,29 @@ def generate_new_levels(model, params, latent_dim, method):
         fig.delaxes(axs[i])
 
     plt.tight_layout()
+    plt.show()
+
+
+def visualize_latent_space(model, params, batch, method, num_components=2, is_vae=False):
+    # Pass levels through the encoder to get latent representations
+    latent_vectors = model.apply({'params': params}, batch, method=method)
+
+    # If VAE, latent_vectors might be a tuple (mu, log_var), so we use mu
+    if is_vae:
+        latent_vectors = latent_vectors[0] 
+
+    if len(latent_vectors.shape) > 2:
+        latent_vectors = latent_vectors.reshape((latent_vectors.shape[0], -1))
+        
+    # Reduce to 2D using PCA
+    pca = PCA(n_components=num_components)
+    latent_2d = pca.fit_transform(latent_vectors)
+
+    # Plot the 2D latent space
+    plt.figure(figsize=(8, 6))
+    plt.scatter(latent_2d[:, 0], latent_2d[:, 1], c='blue', label='Sokoban Levels')
+    plt.title(f'{num_components}D Visualization of Latent Space')
+    plt.xlabel('PCA Component 1')
+    plt.ylabel('PCA Component 2')
+    plt.legend()
     plt.show()

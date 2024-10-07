@@ -5,7 +5,7 @@ import optax
 import matplotlib.pyplot as plt
 import jumanji
 from tqdm import tqdm
-from utils import encode_multiple_levels, assets, generate_new_levels, resize_image, visualize_decoded_level_with_assets
+from handIns.two.MichalPodgorniHandIn2.utils import encode_multiple_levels, visualize_latent_space, assets, generate_new_levels, resize_image, visualize_decoded_level_with_assets
 
 # Initialize RNG and environment
 rng = jax.random.PRNGKey(0)
@@ -61,6 +61,8 @@ class Autoencoder(nn.Module):
         latent = self.encoder(x)
         reconstructed = self.decoder(latent)
         return reconstructed
+    def encode(self, latent):
+        return self.encoder(latent)
     def decode(self, latent):
         return self.decoder(latent)
 
@@ -111,6 +113,7 @@ for key in assets.keys():
 batch = encoded_levels.reshape((-1, *original_shape))
 train_autoencoder(500, batch) 
 
+visualize_latent_space(model, params, batch, Autoencoder.encode)
 visualize_decoded_level_with_assets(model, params, encoded_levels[-1], original_shape)
 generate_new_levels(model, params, latent_dim = latent_dim, method = Autoencoder.decode)
 
