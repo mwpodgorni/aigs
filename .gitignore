@@ -5,12 +5,8 @@ dist/
 **/*.svg
 **/*.venv
 /handIns/two/attempt3/myenv
-/handIns/three/Chess
-/handIns/three/train
-/handIns/three/test
-/handIns/three/Chess
-/handIns/three/Chess
-/handIns/three/train
-/handIns/three/train
-/handIns/three/train
-/handIns/three
+/handIns/three/fer/test
+/handIns/three/fer/train
+/handIns/three/hands/fingers
+/handIns/three/hands/test
+/handIns/three/hands/train
