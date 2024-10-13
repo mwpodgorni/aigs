@@ -33,7 +33,7 @@ def extract_label_from_filename(filename):
         raise ValueError(f"Unexpected label format in file: {filename}")
 
 # Updated function to load images and extract labels from filenames
-def load_images_from_folder(folder, fraction=0.3):
+def load_images_from_folder(folder, fraction=0.5):
     images = []
     labels = []
     image_files = glob.glob(os.path.join(folder, '*.png'))  # Match all PNG files
@@ -173,19 +173,20 @@ def train_epoch(params, opt_state, rng, train_images, train_labels, num_epochs):
 
 # Example training loop using lax.scan
 rng = random.PRNGKey(42)
-num_epochs = 10
-for epoch in range(num_epochs):
+num_epochs = 20
+for epoch in tqdm(range(num_epochs)):
     rng, input_rng = random.split(rng)
     params, opt_state, avg_loss = train_epoch(params, opt_state, input_rng, train_images, train_labels, num_epochs=1)
     print(f"Epoch {epoch + 1}, Loss: {avg_loss}")
 
 # Testing function for classifying random test images
 def classify_and_display_image(params, test_image, true_label):
-    # Ensure test_image has 4 dimensions: (batch_size, height, width, channels)
-    if test_image.ndim == 3:  # If missing batch and channel dimensions
-        test_image = test_image[jnp.newaxis, ..., jnp.newaxis]  # Add batch and channel dimensions
-    elif test_image.ndim == 4 and test_image.shape[-1] != 1:  # If missing only the channel dimension
-        test_image = test_image[..., jnp.newaxis]
+    # Ensure test_image has exactly 4 dimensions: (batch_size, height, width, channels)
+    if test_image.ndim == 3:  # If missing the batch dimension
+        test_image = test_image[jnp.newaxis, ...]  # Add batch dimension (batch_size, height, width)
+
+    if test_image.ndim == 4 and test_image.shape[-1] != 1:  # If missing the channel dimension
+        test_image = test_image[..., jnp.newaxis]  # Add channel dimension (batch_size, height, width, channels)
 
     # Forward pass through the CNN
     logits = cnn_forward(params, test_image, rng)
@@ -194,7 +195,7 @@ def classify_and_display_image(params, test_image, true_label):
     predicted_label = jnp.argmax(logits, axis=-1)
 
     # Display the image and predictions
-    plt.imshow(test_image[0, ..., 0], cmap='gray')  # Remove batch and channel dimensions for display
+    plt.imshow(test_image[0, ..., 0], cmap='gray')  # Display the first image in the batch
     plt.title(f"True label: {true_label}, Predicted label: {predicted_label[0]}")
     plt.axis('off')
     plt.show()
