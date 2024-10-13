@@ -10,6 +10,49 @@ from jax import random, jit, grad
 import jax.lax
 import matplotlib.pyplot as plt
 
+save_dir = './conv_visualizations'
+os.makedirs(save_dir, exist_ok=True) 
+
+def visualize_and_save_feature_maps(params, image, rng, epoch, save_dir):
+    logits, feature_maps_conv1 = cnn_forward_with_feature_maps(params, image, rng)
+
+    feature_maps_conv2 = jax.nn.relu(jax.lax.conv_general_dilated(
+        feature_maps_conv1, params['conv2'], (2, 2), 'SAME', dimension_numbers=('NHWC', 'HWIO', 'NHWC')))
+
+    # Create a new figure for the visualization
+    plt.figure(figsize=(15, 10))
+
+    # Plot the original image
+    plt.subplot(3, 1, 1)
+    plt.imshow(image[..., 0], cmap='gray')
+    plt.title(f'Original Image - Epoch {epoch}')
+    plt.axis('off')
+
+    # Plot the first conv layer feature maps (conv1)
+    num_channels_conv1 = feature_maps_conv1.shape[-1]
+    num_columns = 8
+    num_rows = (num_channels_conv1 + num_columns - 1) // num_columns  # Calculate rows based on columns
+    for i in range(num_channels_conv1):
+        plt.subplot(3, num_columns, num_columns + i + 1)
+        plt.imshow(feature_maps_conv1[0, :, :, i], cmap='gray')
+        plt.title(f'conv1 - channel {i}')
+        plt.axis('off')
+
+    # Plot the second conv layer feature maps (conv2)
+    num_channels_conv2 = feature_maps_conv2.shape[-1]
+    for i in range(num_channels_conv2):
+        plt.subplot(3, num_columns, 2 * num_columns + i + 1)
+        plt.imshow(feature_maps_conv2[0, :, :, i], cmap='gray')
+        plt.title(f'conv2 - channel {i}')
+        plt.axis('off')
+
+    # Save the figure
+    file_path = os.path.join(save_dir, f'epoch_{epoch}.png')
+    plt.savefig(file_path)
+    plt.close()
+
+    print(f"Saved visualization for epoch {epoch} at {file_path}")
+
 # Function to extract label from the file name based on the last two characters
 def extract_label_from_filename(filename):
     # Remove the file extension and then extract the last two characters
